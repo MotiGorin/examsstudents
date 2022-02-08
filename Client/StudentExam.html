@@ -1,0 +1,260 @@
+<html>
+
+<head>
+    <title>Exams Page</title>
+    <!--CSS style Using bootstart 4 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+
+<!--On click will run the Func-->
+
+<body onload="getGradesData()">
+
+    <!--Show the Current Name of student in the page-->
+    <h1 id="wellcomeID"></h1>
+
+    <table id="tbl" class="table table-hover" border="1">
+    </table><br><br>
+
+
+    <!--Using the same Div For Edit And Add Func's - Using display style to change and hide the buttons -->
+    <div id="divID" style="display: none">
+        Exam Name: <input type="text" id="examNameID" /><br />
+        Exams Date:&nbsp;&nbsp;<input type="date" id="examDateID" /><br />
+        Grades: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <input type="number" id="gradesID" />
+
+        <!--On click will take the Data inside the inputs and UPDATA it-->
+        <button id="updateButID" style="display: none" onclick="updateData()">Update</button>
+        <!--On click will take the Data inside the inputs and ADD it-->
+        <button id="addNewDataID" style="display: none" onclick="addData()">Add New</button>
+    </div>
+    <br /><br />
+
+    <!--On click will run the Func-->
+    <button onclick="addExam()" id='addButID' class='btn btn-dark'>Add New Exams</button>
+
+</body>
+
+<script>
+    const URL_PATH = 'http://localhost:8000/students';
+
+    //Get the student id from the session storage
+    const studentID = sessionStorage.getItem('id');
+
+    // Loads all student's exams from database into a dynamic table.
+    const getGradesData = async () => {
+
+
+        const tableElem = document.getElementById('tbl');
+        tableElem.innerHTML = ""; //Clean Table HTML on Start.
+
+        const trElemTitle = document.createElement('tr');
+        const thExamName = document.createElement('th');
+        const thGrades = document.createElement('th');
+        const thExamsDate = document.createElement('th');
+        const thUpdateGrade = document.createElement('th');
+        const thDeleteGrade = document.createElement('th');
+
+
+
+        document.getElementById('addButID').style = "display: block"; //Put Button on block state.
+
+        thExamName.innerText = 'Exam Name';
+        thGrades.innerText = 'Grades';
+        thExamsDate.innerText = 'Exams Date';
+        thUpdateGrade.innerText = 'Update Grade';
+        thDeleteGrade.innerText = 'Delete Grade';
+
+
+        trElemTitle.appendChild(thExamName);
+        trElemTitle.appendChild(thGrades);
+        trElemTitle.appendChild(thExamsDate);
+        trElemTitle.appendChild(thUpdateGrade);
+        trElemTitle.appendChild(thDeleteGrade);
+        tableElem.appendChild(trElemTitle);
+
+
+
+        const response = await fetch(`${URL_PATH}/${studentID}`)
+
+        if (response.ok) {
+            const student = await response.json();
+            let counter = 0; //Set a Counter as 0 - will use latter for the Edit Func.
+
+            // Put the data inside the table using map. 
+            student.Exams.map(exam => {
+
+                const wellcomeH = document.getElementById('wellcomeID');
+                wellcomeH.innerText = `Student Name: ${student.FullName}`;
+
+                const trElem = document.createElement('tr');
+                const tdExamName = document.createElement('td');
+                const tdGrades = document.createElement('td');
+                const tdExamsDate = document.createElement('td');
+                const trAddGrade = document.createElement('div');
+                const tdUpdateGrade = document.createElement('td');
+                const tdDeletGrade = document.createElement('td');
+
+                tdExamName.innerText = exam.Name
+                tdGrades.innerText = exam.Grade
+                //Put date in a new class, then use ISOString and slice it.
+                const fixedExamDate = new Date(exam.Date).toISOString().slice(0, 10);
+                tdExamsDate.innerHTML = fixedExamDate
+
+                const updateGradeBtnElem = document.createElement('button') //Creatre an update button.
+                updateGradeBtnElem.value = counter;
+                updateGradeBtnElem.innerText = 'Edit Grade'
+                updateGradeBtnElem.className = "btn btn-light"
+                updateGradeBtnElem.setAttribute('onclick', 'editGrade(value)') //editGrade will run and also pass the value.
+                tdUpdateGrade.appendChild(updateGradeBtnElem)
+
+                const deleteGradeBtnElem = document.createElement('button') //Creatre an Delete button.
+                deleteGradeBtnElem.value = counter;
+                deleteGradeBtnElem.innerText = 'Delete'
+                deleteGradeBtnElem.className = "btn btn-light"
+                deleteGradeBtnElem.setAttribute('onclick', 'deleteGrade(value)') //deletGrade will run and also pass the value.
+                tdDeletGrade.appendChild(deleteGradeBtnElem)
+
+                trElem.appendChild(tdExamName)
+                trElem.appendChild(tdGrades)
+                trElem.appendChild(tdExamsDate)
+                trElem.appendChild(tdUpdateGrade)
+                trElem.appendChild(tdDeletGrade)
+                tableElem.appendChild(trElem);
+
+                counter++; //increaing by 1.
+            });
+        }
+    }
+
+    // Edit grade func. Also using the counter value for mapping.
+    const editGrade = async (counter) => {
+        const response = await fetch(`${URL_PATH}/${studentID}`)
+
+        if (response.ok) {
+            const student = await response.json();
+
+            //Change display states of the buttons for Update state.
+            document.getElementById('divID').style = "display: block";
+            document.getElementById('updateButID').style = "display: block";
+            document.getElementById('addButID').style = "display: none";
+            document.getElementById('addNewDataID').style = "display: none";
+
+            //Put date in a new class, then use ISOString and slice it.
+            const fixedDateOnUpdate = new Date(student.Exams[counter].Date).toISOString().slice(0, 10);
+
+            //Put value in the elementes and using the counter for mapping the Current ones.
+            document.getElementById('examNameID').value = student.Exams[counter].Name;
+            document.getElementById('examDateID').value = fixedDateOnUpdate;
+            document.getElementById('gradesID').value = student.Exams[counter].Grade;
+            document.getElementById('updateButID').value = counter;
+        }
+    }
+
+
+    // Func that will take the data from the DIV and will UPDATE it using PUT method.
+    const updateData = async () => {
+        let counter = document.getElementById('updateButID').value; //Using counter value for mapping.
+        const response = await fetch(`${URL_PATH}/${studentID}`);
+
+        if (response.ok) {
+            const student = await response.json();
+            ////Using counter value to update the Values.
+            student.Exams[document.getElementById('updateButID').value].Name = document.getElementById('examNameID').value;
+            student.Exams[document.getElementById('updateButID').value].Date = document.getElementById('examDateID').value;
+            student.Exams[document.getElementById('updateButID').value].Grade = document.getElementById('gradesID').value;
+            document.getElementById('divID').style = "display: none";
+            document.getElementById('addButID').style = "display: block";
+
+
+            const response1 = await fetch(`${URL_PATH}/${studentID}`, {
+                method: "put",
+                headers: { "content-type": 'application/json' },
+                body: JSON.stringify(student)
+            });
+
+            if (response1.ok) {
+                const data = await response1.json();
+                console.log(data);
+            }
+
+
+        }
+
+        window.location.reload();// Reload the window.
+
+    }
+
+    // Delete Grade Func using splice in Put method.
+    const deleteGrade = async (counter) => {
+        const response = await fetch(`${URL_PATH}/${studentID}`);
+        if (response.ok) {
+            const student = await response.json()
+            student.Exams.splice(counter, 1) //Deleting the exam using the "spilce" + Counter.
+            const response3 = await fetch(`${URL_PATH}/${studentID}`, {
+                method: 'put',
+                headers: { 'content-Type': 'application/json' },
+                body: JSON.stringify(student)
+            })
+            if (response3.ok) {
+                const data = await response3.json();
+                console.log(data);
+            }
+        }
+        window.location.reload();// Reload the window.
+    }
+
+
+    // Func that open the input Div in ADD new exam's state.
+    const addExam = async () => {
+        const response = await fetch(`${URL_PATH}/${studentID}`)
+
+        if (response.ok) {
+            const student = await response.json();
+            document.getElementById('divID').style = "display: block";
+            document.getElementById('updateButID').style = "display: none";
+            document.getElementById('addNewDataID').style = "display: block";
+            document.getElementById('addButID').style = "display: none";
+            document.getElementById('examNameID').placeholder = 'Enter a Name';
+            document.getElementById('gradesID').placeholder = 'Enter a Grade';
+        }
+    };
+
+    // Func that will take the data from the DIV and will ADD it using PUT method.
+    const addData = async () => {
+        const response = await fetch(`${URL_PATH}/${studentID}`)
+        const student = await response.json();
+
+        // Create an OBJ from DIV values.
+        const updateStudent = {
+            Name: document.getElementById('examNameID').value,
+            Date: document.getElementById('examDateID').value,
+            Grade: document.getElementById('gradesID').value,
+        };
+
+        //Add the OBJ to the Exams using PUSH.
+        student.Exams.push(updateStudent)
+
+
+        const response2 = await fetch(`${URL_PATH}/${studentID}`, {
+            method: "put",
+            headers: { "content-type": 'application/json' },
+            body: JSON.stringify(student)
+        });
+
+        if (response2.ok) {
+            const data = await response2.json();
+            console.log(data);
+            window.location.reload();// Reload the window.
+        }
+    }
+
+
+</script>
+
+</html>

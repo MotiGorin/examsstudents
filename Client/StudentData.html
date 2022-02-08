@@ -1,0 +1,138 @@
+<html>
+
+<head>
+    <title>All INFO</title>
+    <!--CSS style Using bootstart 4 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+
+<!--On click will run the Func-->
+
+<body onload="loadData()">
+
+    <table id="tbl" class="table table-hover" border="1">
+
+    </table><br><br>
+    <h1 id="wellcomeID"></h1>
+
+
+    <table id="tblExams" border="1" class="table table-dark table-striped">
+    </table>
+
+
+    <br />
+
+</body>
+
+<script>
+    const URL_PATH = 'http://localhost:8000/students';
+
+    //Get the student id from the session storage
+    const studentID = sessionStorage.getItem('id');
+
+    // Loads all student's DATA from database into a dynamic table.
+    const loadData = async () => {
+
+        const tableElem = document.getElementById('tbl');
+        const trElemTitle = document.createElement('tr');
+        const thFullName = document.createElement('th');
+        const thEmail = document.createElement('th');
+        const thFaculty = document.createElement('th');
+        const thBirthDate = document.createElement('th');
+
+        thFullName.innerHTML = 'Full Name';
+        thEmail.innerHTML = 'E-mail';
+        thFaculty.innerHTML = 'Faculty';
+        thBirthDate.innerHTML = 'Birth Date';
+
+
+        trElemTitle.appendChild(thFullName);
+        trElemTitle.appendChild(thEmail);
+        trElemTitle.appendChild(thFaculty);
+        trElemTitle.appendChild(thBirthDate);
+        tableElem.appendChild(trElemTitle);
+
+
+        const reponse = await fetch(`${URL_PATH}/${studentID}`);
+        if (reponse.ok) {
+            const students = await reponse.json();
+
+            // Creating a table's ROW
+            const trElem = document.createElement('tr')
+
+            // Creating a tabl's DATA (column)
+            const tdFullName = document.createElement('td')
+            const tdEmail = document.createElement('td')
+            const tdFaculty = document.createElement('td')
+            const tdBirthDate = document.createElement('td')
+
+            tdFullName.innerText = students.FullName;
+            tdEmail.innerText = students.Email;
+            tdFaculty.innerText = students.Faculty;
+            const fixedDate = new Date(students.BirthDate).toISOString().slice(0, 10); //Put date in a new class, then use ISOString and slice it.
+            tdBirthDate.innerHTML = fixedDate
+
+            trElem.appendChild(tdFullName);
+            trElem.appendChild(tdEmail);
+            trElem.appendChild(tdFaculty);
+            trElem.appendChild(tdBirthDate);
+            tableElem.appendChild(trElem);
+
+            // Also Show all the Exams data of the student in a table.
+            const tableElemExams = document.getElementById('tblExams');
+            const trElemTitle = document.createElement('tr');
+            const thExamName = document.createElement('th');
+            const thGrades = document.createElement('th');
+            const thExamsDate = document.createElement('th');
+
+            thExamName.innerHTML = 'Exam Name';
+            thGrades.innerHTML = 'Grades';
+            thExamsDate.innerHTML = 'Exams Date';
+
+            trElemTitle.appendChild(thExamName);
+            trElemTitle.appendChild(thGrades);
+            trElemTitle.appendChild(thExamsDate);
+            tableElemExams.appendChild(trElemTitle);
+
+
+            const responseExams = await fetch(`${URL_PATH}/${studentID}`)
+
+            if (responseExams.ok) {
+                const studentExam = await responseExams.json();
+
+                studentExam.Exams.map(exam => {
+
+                    const wellcomeH = document.getElementById('wellcomeID');
+                    // Show Current user name in a H1 title. 
+                    wellcomeH.innerText = `Exams Data of: ${studentExam.FullName}`;
+
+                    const trElem = document.createElement('tr');
+                    const tdExamName = document.createElement('td');
+                    const tdGrades = document.createElement('td');
+                    const tdExamsDate = document.createElement('td');
+                    tdExamName.innerText = exam.Name;
+                    tdGrades.innerText = exam.Grade;
+                    const fixedExamDate = new Date(exam.Date).toISOString().slice(0, 10); //Put date in a new class, then use ISOString and slice it.
+                    tdExamsDate.innerHTML = fixedExamDate;
+
+
+                    trElem.appendChild(tdExamName);
+                    trElem.appendChild(tdGrades);
+                    trElem.appendChild(tdExamsDate);
+                    tableElemExams.appendChild(trElem);
+                });
+            }
+
+        }
+    }
+
+
+
+</script>
+
+</html>

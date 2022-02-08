@@ -1,0 +1,134 @@
+<html>
+
+<head>
+    <title>Main Page</title>
+    <!--CSS style Using bootstart 4 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</head>
+
+<!--When the page load it will run the Func-->
+
+<body onload="getDataStudents()">
+    <table id="tbl" class="table table-hover" border="1">
+        <tr>
+            <th>Full Name</th>
+            <th>Faculty</th>
+            <th>Exams</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+    </table>
+
+    <!--Create Add New Studnet Button -->
+    <button onclick="addStudent()" class=" btn btn-dark">Add New Student</button>
+
+</body>
+<script>
+    const PATH = 'http://localhost:8000/students'
+
+    // Get all students from DB into a dynamic table if response is ok.
+    const getDataStudents = async () => {
+        const tableElem = document.getElementById('tbl');
+        const response = await fetch(PATH);
+
+        if (response.ok) {
+            const students = await response.json();
+
+            // Put the data inside the table using map. 
+            students.map(student => {
+                const trElem = document.createElement('tr');
+                const tdFullName = document.createElement('td');
+                const tdFullNameP = document.createElement('p');
+                tdFullNameP.style = "cursor: pointer";
+                tdFullNameP.style.textDecoration = "underline";
+                tdFullNameP.value = student._id;
+                tdFullNameP.setAttribute('onclick', 'sendToStudent(value)');  // Click will run a Func and pass a value.
+                tdFullNameP.innerHTML = student.FullName;
+                tdFullName.appendChild(tdFullNameP);
+
+                const tdFaculty = document.createElement('td');
+                tdFaculty.innerHTML = student.Faculty;
+                const tdExams = document.createElement('td');
+
+                const tdExamsP = document.createElement('p');
+                tdExamsP.style = "cursor: pointer";
+                tdExamsP.style.textDecoration = "underline";
+                tdExamsP.innerText = "Students Exams";
+                tdExamsP.value = student._id;
+                tdExamsP.setAttribute('onclick', 'sendToExams(value)'); // Click will run a Func and pass a value.
+
+                const tdEdit = document.createElement('td'); // Create a Edit button
+                const editBtnElem = document.createElement('button');
+                editBtnElem.className = "btn btn-light";
+                editBtnElem.innerText = 'Edit';
+                editBtnElem.onclick = () => editStudent(student._id);
+
+                const tdDelete = document.createElement('td');  // Create a Delete button
+                const deleteBtnElem = document.createElement('button');
+                deleteBtnElem.className = "btn btn-light";
+                deleteBtnElem.innerText = 'Delete';
+                deleteBtnElem.onclick = () => deleteStudnet(student._id); // Click will run a Func and pass a value.
+
+
+                tdExams.appendChild(tdExamsP);
+                tdEdit.appendChild(editBtnElem);
+                tdDelete.appendChild(deleteBtnElem);
+                trElem.appendChild(tdFullName);
+                trElem.appendChild(tdFaculty);
+                trElem.appendChild(tdExams);
+                trElem.appendChild(tdEdit);
+                trElem.appendChild(tdDelete);
+                tableElem.appendChild(trElem);
+            });
+        }
+    }
+
+
+
+
+    //Redirects the client to Student's  ALL details page using Session Storage ID.
+    const sendToStudent = async (id) => {
+        sessionStorage.setItem('id', id);
+        window.location.href = 'StudentData.html';
+    }
+
+    //Redirects the client to Student's Exams page using Session Storage ID.
+    const sendToExams = async (id) => {
+        sessionStorage.setItem('id', id);
+        window.location.href = 'StudentExam.html';
+    }
+
+
+    //Redirects the client to Student's Edit details page using Session Storage ID.
+    const editStudent = async (id) => {
+        sessionStorage.setItem('id', id);
+        window.location.href = "editStudent.html";
+    }
+
+    //Deletes a student from database if the response is ok, Then reloads the page.
+    const deleteStudnet = async (id) => {
+        const response = await fetch(`${PATH}/${id}`, { method: "delete" });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data);
+            window.location.reload();
+        }
+    }
+
+    //Redirects the client to Student's Add New Student page using Session Storage ID.
+    const addStudent = async (id) => {
+        sessionStorage.setItem('id', id);
+        window.location.href = 'addStudent.html';
+    }
+
+
+</script>
+
+</html>

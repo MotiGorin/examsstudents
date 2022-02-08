@@ -1,0 +1,93 @@
+<html>
+
+<head>
+    <title>Edit Page</title>
+    <!--CSS style Using bootstart 4 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+
+
+<!--When the page load it will run the Func-->
+
+<body onload="loadData()">
+
+
+
+    <table border="1" class="table table-hover">
+        <tr>
+            <td>Full Name:</td>
+            <td><input type="text" id="FullNameID" /></td>
+        </tr>
+        <tr>
+            <td>Email:</td>
+            <td><input type="email" id="EmailID" /></td>
+        </tr>
+        <tr>
+            <td>Faculty:</td>
+            <td><input type="text" id="FacultyID" /></td>
+        </tr>
+        <tr>
+            <td>Birth Date:</td>
+            <td><input type="date" id="BirthDateID" /></td>
+        </tr>
+    </table>
+    <br />
+
+    <!--On click will run the Func-->
+    <button onclick="updateData()" class=" btn btn-dark">Update Student</button>
+
+</body>
+
+
+<script>
+    const URL_PATH = 'http://localhost:8000/students';
+
+    //Get the student id from the session storage
+    const studentID = sessionStorage.getItem('id');
+
+    const loadData = async () => {
+
+        //Get the specific student that need to be updated
+        const reponse = await fetch(`${URL_PATH}/${studentID}`);
+        if (reponse.ok) {
+            const student = await reponse.json();
+
+            // Show the Current values.
+            document.getElementById('FullNameID').value = student.FullName;
+            document.getElementById('EmailID').value = student.Email;
+            document.getElementById('FacultyID').value = student.Faculty;
+            const fixedDate = new Date(student.BirthDate).toISOString().slice(0, 10); //Put date in new class, then use ISOString and slice it.
+            document.getElementById('BirthDateID').value = fixedDate;
+        }
+    }
+
+    //Create an updated student with the new Data, and update it using PUT method.
+    const updateData = async () => {
+        const updateStudent = {
+            FullName: document.getElementById('FullNameID').value,
+            Email: document.getElementById('EmailID').value,
+            Faculty: document.getElementById('FacultyID').value,
+            BirthDate: document.getElementById('BirthDateID').value,
+
+        };
+
+        const response = await fetch(`${URL_PATH}/${studentID}`, {
+            method: "put",
+            headers: { "content-type": 'application/json' },
+            body: JSON.stringify(updateStudent)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data);
+            window.location.href = "Studentsexams.html" // If ok will send back to Main Page.
+        }
+    }
+</script>
+
+</html>
